@@ -17,33 +17,30 @@
       console.warn('[Bulk Uploader] Failed to inject hook.js');
     };
 
-    // Once hook.js loads, tell it whether this site is enabled
     script.onload = () => {
       const hostname = window.location.hostname;
-      chrome.storage.sync.get(['disabledSites'], (result) => {
-        const disabled = result.disabledSites || [];
-        const siteEnabled = !disabled.includes(hostname);
-        window.postMessage({
-          type: 'BU_SETTINGS',
-          siteEnabled,
-          hostname,
-        }, '*');
-      });
+      try {
+        chrome.storage.local.get(['disabledSites'], (result) => {
+          const disabled = (result && result.disabledSites) || [];
+          const siteEnabled = !disabled.includes(hostname);
+          window.postMessage({ type: 'BU_SETTINGS', siteEnabled, hostname }, '*');
+        });
+      } catch (e) {
+        window.postMessage({ type: 'BU_SETTINGS', siteEnabled: true, hostname }, '*');
+      }
     };
 
     target.appendChild(script);
   }
 
-  // Retry up to 30s, then give up
   let attempts = 0;
-  const MAX_ATTEMPTS = 100;
   function tryInject() {
     const target = document.head || document.documentElement;
     if (target) {
       inject();
     } else {
       attempts++;
-      if (attempts < MAX_ATTEMPTS) {
+      if (attempts < 100) {
         setTimeout(tryInject, 300);
       }
     }

@@ -1,4 +1,4 @@
-import { useState, useRef } from 'react';
+import { useState, useRef, useEffect, useCallback } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { Upload, Folder, FileText, X, CheckCircle2, Clock, Layers, ArrowRight, ChevronRight } from 'lucide-react';
 import { FileExplorer } from './components/FileExplorer';
@@ -28,7 +28,7 @@ function filterFiles(files: FileList): FileEntry[] {
     })
     .map(f => ({
       name: f.name,
-      path: (f as any).path || f.name,
+      path: f.webkitRelativePath || f.name,
       size: f.size,
       type: f.type,
       webkitRelativePath: f.webkitRelativePath || f.name,
@@ -46,31 +46,45 @@ function formatBytes(bytes: number): string {
 export default function App() {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedFiles, setSelectedFiles] = useState<FileEntry[]>([]);
+  const [isProcessing, setIsProcessing] = useState(false);
   const [isDone, setIsDone] = useState(false);
   const [history, setHistory] = useState<HistoryEntry[]>([]);
 
   const fileInputRef = useRef<HTMLInputElement>(null);
   const folderInputRef = useRef<HTMLInputElement>(null);
 
-  const handleModeChoice = (mode: 'file' | 'folder') => {
+  useEffect(() => {
+    const el = folderInputRef.current;
+    if (el) {
+      (el as any).webkitdirectory = true;
+      (el as any).directory = true;
+    }
+  }, []);
+
+  const handleModeChoice = useCallback((mode: 'file' | 'folder') => {
     setIsModalOpen(false);
     setTimeout(() => {
       if (mode === 'file') fileInputRef.current?.click();
       else folderInputRef.current?.click();
     }, 80);
-  };
+  }, []);
 
-  const processFiles = (files: FileList | null) => {
+  const processFiles = useCallback((files: FileList | null) => {
     if (!files || files.length === 0) return;
-    const entries = filterFiles(files);
-    if (entries.length === 0) return;
-
-    setSelectedFiles(entries);
+    setIsProcessing(true);
     setIsDone(false);
 
-    // Simulate brief processing then mark done
     setTimeout(() => {
+      const entries = filterFiles(files);
+      if (entries.length === 0) {
+        setIsProcessing(false);
+        return;
+      }
+
+      setSelectedFiles(entries);
+      setIsProcessing(false);
       setIsDone(true);
+
       const folderName = entries[0].webkitRelativePath.split('/')[0] || entries[0].name;
       const totalSize = entries.reduce((a, f) => a + f.size, 0);
       setHistory(h => [{
@@ -79,8 +93,8 @@ export default function App() {
         totalSize,
         date: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
       }, ...h].slice(0, 6));
-    }, 400);
-  };
+    }, 80);
+  }, []);
 
   const totalSize = selectedFiles.reduce((a, f) => a + f.size, 0);
 
@@ -88,7 +102,6 @@ export default function App() {
     <div className="min-h-screen text-slate-200 pb-24 selection:bg-violet-600 selection:text-white"
       style={{ background: 'radial-gradient(ellipse 80% 60% at 50% -10%, rgba(109,40,217,0.12) 0%, #040608 70%)' }}
     >
-      {/* Hidden inputs - NOT intercepted by extension (they have the right attrs) */}
       <input
         ref={fileInputRef}
         type="file"
@@ -103,11 +116,9 @@ export default function App() {
         multiple
         className="hidden"
         data-bu-bypass="true"
-        {...({ webkitdirectory: '', directory: '' } as any)}
         onChange={e => processFiles(e.target.files)}
       />
 
-      {/* Nav */}
       <nav className="sticky top-0 z-40 border-b border-white/[0.04]"
         style={{ background: 'rgba(4,6,8,0.85)', backdropFilter: 'blur(20px)' }}>
         <div className="max-w-5xl mx-auto px-6 h-14 flex items-center justify-between">
@@ -130,7 +141,6 @@ export default function App() {
 
       <main className="max-w-5xl mx-auto px-6 pt-16">
 
-        {/* Hero */}
         <div className="mb-16 max-w-2xl">
           <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full border border-violet-500/20 bg-violet-500/8 text-violet-400 text-xs font-medium mb-6">
             <div className="w-1.5 h-1.5 rounded-full bg-violet-400 animate-pulse" />
@@ -149,10 +159,8 @@ export default function App() {
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
 
-          {/* Main panel */}
           <div className="lg:col-span-2 space-y-5">
 
-            {/* Drop zone */}
             <div
               onClick={() => setIsModalOpen(true)}
               className="group relative rounded-2xl border border-white/[0.06] cursor-pointer overflow-hidden transition-all hover:border-violet-500/30"
@@ -185,9 +193,22 @@ export default function App() {
               </div>
             </div>
 
-            {/* File explorer result */}
             <AnimatePresence>
-              {selectedFiles.length > 0 && (
+              {isProcessing && (
+                <motion.div
+                  initial={{ opacity: 0, y: 8 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -8 }}
+                  className="rounded-2xl border border-white/[0.05] p-5 text-center"
+                  style={{ background: 'rgba(255,255,255,0.015)' }}
+                >
+                  <p className="text-sm text-slate-400">Processing files...</p>
+                </motion.div>
+              )}
+            </AnimatePresence>
+
+            <AnimatePresence>
+              {selectedFiles.length > 0 && !isProcessing && (
                 <motion.div
                   initial={{ opacity: 0, y: 8 }}
                   animate={{ opacity: 1, y: 0 }}
@@ -199,10 +220,8 @@ export default function App() {
             </AnimatePresence>
           </div>
 
-          {/* Sidebar */}
           <div className="space-y-5">
 
-            {/* Stats */}
             <div className="rounded-2xl border border-white/[0.05] p-5"
               style={{ background: 'rgba(255,255,255,0.015)' }}>
               <p className="text-[10px] font-semibold uppercase tracking-widest text-slate-600 mb-4">Current Selection</p>
@@ -229,7 +248,6 @@ export default function App() {
               </div>
             </div>
 
-            {/* History */}
             <div className="rounded-2xl border border-white/[0.05] p-5"
               style={{ background: 'rgba(255,255,255,0.015)' }}>
               <div className="flex items-center gap-2 mb-4">
@@ -254,7 +272,6 @@ export default function App() {
               </div>
             </div>
 
-            {/* How it works */}
             <div className="rounded-2xl border border-white/[0.05] p-5"
               style={{ background: 'rgba(255,255,255,0.015)' }}>
               <p className="text-[10px] font-semibold uppercase tracking-widest text-slate-600 mb-4">How it works</p>
@@ -280,7 +297,6 @@ export default function App() {
         </div>
       </main>
 
-      {/* Upload modal */}
       <AnimatePresence>
         {isModalOpen && (
           <div className="fixed inset-0 z-50 flex items-center justify-center p-6">
@@ -307,7 +323,6 @@ export default function App() {
                 <X size={15} />
               </button>
 
-              {/* Header */}
               <div className="flex items-center gap-3 mb-7">
                 <div className="w-10 h-10 rounded-xl flex items-center justify-center"
                   style={{ background: 'linear-gradient(135deg, #7c3aed, #4f46e5)' }}>
@@ -319,7 +334,6 @@ export default function App() {
                 </div>
               </div>
 
-              {/* Options */}
               <div className="space-y-2.5">
                 <button
                   onClick={() => handleModeChoice('file')}

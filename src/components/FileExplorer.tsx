@@ -47,7 +47,6 @@ export function FileExplorer({ files }: { files: FileEntry[] }) {
   return (
     <div className="rounded-2xl border border-white/[0.05] overflow-hidden"
       style={{ background: 'rgba(255,255,255,0.015)' }}>
-      {/* Header */}
       <div className="px-5 py-3.5 border-b border-white/[0.04] flex items-center justify-between">
         <div className="flex items-center gap-2.5">
           <Folder size={14} className="text-violet-400" />
@@ -65,7 +64,6 @@ export function FileExplorer({ files }: { files: FileEntry[] }) {
         </div>
       </div>
 
-      {/* Tree */}
       <div className="p-3 max-h-80 overflow-y-auto [scrollbar-width:thin] [scrollbar-color:#1e293b_transparent]">
         <TreeNode node={root} isRoot />
       </div>
@@ -136,7 +134,7 @@ function FileRow({ file }: { file: FileEntry }) {
       <span className="text-[12px] text-slate-500 group-hover:text-slate-400 transition-colors truncate">
         {file.name}
       </span>
-      <span className="ml-auto text-[10px] text-slate-700 opacity-0 group-hover:opacity-100 transition-opacity flex-shrink-0">
+      <span className="ml-auto text-[10px] text-slate-600 flex-shrink-0">
         {formatBytes(file.size)}
       </span>
     </div>
