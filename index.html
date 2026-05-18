@@ -1,0 +1,290 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Bulk Uploader</title>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600;700&display=swap');
+
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      width: 280px;
+      background: #0c0e14;
+      color: #e2e8f0;
+      font-family: 'Geist', 'SF Pro Display', system-ui, sans-serif;
+      -webkit-font-smoothing: antialiased;
+      overflow: hidden;
+    }
+
+    .header {
+      padding: 18px 18px 14px;
+      border-bottom: 1px solid rgba(255,255,255,0.05);
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .logo-icon {
+      width: 30px;
+      height: 30px;
+      border-radius: 9px;
+      background: linear-gradient(135deg, #7c3aed, #4f46e5);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+      box-shadow: 0 4px 12px rgba(124,58,237,0.35);
+    }
+
+    .logo-icon svg { display: block; }
+
+    .logo-text { font-size: 13px; font-weight: 700; color: #f8fafc; letter-spacing: -0.2px; }
+    .logo-sub  { font-size: 10px; color: #475569; margin-top: 1px; }
+
+    .status-bar {
+      margin: 14px;
+      padding: 10px 12px;
+      border-radius: 12px;
+      border: 1px solid rgba(16,185,129,0.15);
+      background: rgba(16,185,129,0.06);
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .status-dot {
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      background: #10b981;
+      box-shadow: 0 0 8px rgba(16,185,129,0.5);
+      animation: pulse 2s ease-in-out infinite;
+      flex-shrink: 0;
+    }
+
+    @keyframes pulse {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.5; }
+    }
+
+    .status-text { font-size: 11px; color: #10b981; font-weight: 600; }
+    .status-sub  { font-size: 10px; color: rgba(16,185,129,0.6); margin-top: 1px; }
+
+    .section {
+      padding: 0 14px 14px;
+    }
+
+    .section-label {
+      font-size: 9px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      color: #334155;
+      margin-bottom: 8px;
+    }
+
+    .feature-row {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 7px 0;
+      border-bottom: 1px solid rgba(255,255,255,0.03);
+    }
+    .feature-row:last-child { border-bottom: none; }
+
+    .feature-icon {
+      width: 22px;
+      height: 22px;
+      border-radius: 6px;
+      background: rgba(124,58,237,0.1);
+      border: 1px solid rgba(124,58,237,0.15);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+    }
+
+    .feature-label { font-size: 11px; color: #94a3b8; }
+
+    .site-toggle {
+      margin: 0 14px;
+      padding: 11px 14px;
+      border-radius: 12px;
+      border: 1px solid rgba(255,255,255,0.06);
+      background: rgba(255,255,255,0.02);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+    }
+
+    .site-toggle:hover { border-color: rgba(255,255,255,0.1); }
+
+    .site-toggle-label {
+      font-size: 11px;
+      color: #94a3b8;
+      line-height: 1.3;
+    }
+    .site-toggle-label strong {
+      color: #e2e8f0;
+      font-weight: 600;
+      display: block;
+      font-size: 12px;
+    }
+
+    .toggle-switch {
+      position: relative;
+      width: 38px;
+      height: 22px;
+      background: #1e293b;
+      border: 1px solid rgba(255,255,255,0.06);
+      border-radius: 99px;
+      cursor: pointer;
+      transition: all 0.2s;
+      flex-shrink: 0;
+    }
+    .toggle-switch.on {
+      background: linear-gradient(135deg, #4f46e5, #7c3aed);
+      border-color: rgba(79,70,229,0.4);
+    }
+    .toggle-switch::after {
+      content: '';
+      position: absolute;
+      top: 2px;
+      left: 2px;
+      width: 16px;
+      height: 16px;
+      border-radius: 50%;
+      background: #475569;
+      transition: all 0.2s cubic-bezier(0.34, 1.36, 0.64, 1);
+    }
+    .toggle-switch.on::after {
+      left: 18px;
+      background: white;
+    }
+
+    .footer {
+      padding: 10px 14px 14px;
+      text-align: center;
+      border-top: 1px solid rgba(255,255,255,0.03);
+    }
+
+    .footer-text { font-size: 9px; color: #1e293b; }
+  </style>
+</head>
+<body>
+  <div class="header">
+    <div class="logo-icon">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+        <polyline points="17 8 12 3 7 8"/>
+        <line x1="12" y1="3" x2="12" y2="15"/>
+      </svg>
+    </div>
+    <div>
+      <div class="logo-text">Bulk Uploader</div>
+      <div class="logo-sub">v1.2.0 · Per-site toggle</div>
+    </div>
+  </div>
+
+  <div class="status-bar">
+    <div class="status-dot"></div>
+    <div>
+      <div class="status-text">Engine Active</div>
+      <div class="status-sub">Monitoring all upload inputs</div>
+    </div>
+  </div>
+
+  <div class="site-toggle" id="site-toggle">
+    <div class="site-toggle-label">
+      <strong id="site-name">Current site</strong>
+      Bulk Uploader <span id="site-status-label">enabled</span>
+    </div>
+    <div class="toggle-switch on" id="toggle-switch" role="button" tabindex="0"></div>
+  </div>
+
+  <div class="section">
+    <div class="section-label">Capabilities</div>
+    <div class="feature-row">
+      <div class="feature-icon">
+        <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="#818cf8" stroke-width="2" stroke-linecap="round">
+          <path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/>
+        </svg>
+      </div>
+      <span class="feature-label">Recursive folder upload</span>
+    </div>
+    <div class="feature-row">
+      <div class="feature-icon">
+        <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="#818cf8" stroke-width="2" stroke-linecap="round">
+          <polyline points="20 6 9 17 4 12"/>
+        </svg>
+      </div>
+      <span class="feature-label">Full path structure preserved</span>
+    </div>
+    <div class="feature-row">
+      <div class="feature-icon">
+        <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="#818cf8" stroke-width="2" stroke-linecap="round">
+          <circle cx="12" cy="12" r="10"/>
+          <path d="M12 8v4l3 3"/>
+        </svg>
+      </div>
+      <span class="feature-label">Works on any website</span>
+    </div>
+    <div class="feature-row">
+      <div class="feature-icon">
+        <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="#818cf8" stroke-width="2" stroke-linecap="round">
+          <rect x="3" y="11" width="18" height="11" rx="2" ry="2"/>
+          <path d="M7 11V7a5 5 0 0 1 10 0v4"/>
+        </svg>
+      </div>
+      <span class="feature-label">No data leaves your device</span>
+    </div>
+  </div>
+
+  <div class="footer">
+    <div class="footer-text">Click any upload field to choose Files or Folder mode</div>
+  </div>
+
+  <script>
+    (function () {
+      const toggle = document.getElementById('toggle-switch');
+      const siteNameEl = document.getElementById('site-name');
+      const statusLabel = document.getElementById('site-status-label');
+
+      // Get current tab hostname
+      chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
+        if (!tabs[0]) return;
+        const url = new URL(tabs[0].url);
+        const hostname = url.hostname || url.host;
+        siteNameEl.textContent = hostname;
+
+        chrome.runtime.sendMessage({ type: 'GET_SITE_STATUS', hostname }, (res) => {
+          if (res) updateUI(hostname, res.enabled);
+        });
+      });
+
+      function updateUI(hostname, enabled) {
+        toggle.classList.toggle('on', enabled);
+        statusLabel.textContent = enabled ? 'enabled' : 'disabled';
+        statusLabel.style.color = enabled ? '#10b981' : '#ef4444';
+      }
+
+      toggle.addEventListener('click', () => {
+        const hostname = siteNameEl.textContent;
+        const currentlyOn = toggle.classList.contains('on');
+        chrome.runtime.sendMessage({
+          type: 'TOGGLE_SITE',
+          hostname,
+          enable: !currentlyOn,
+        }, (res) => {
+          if (res && res.success) {
+            updateUI(hostname, res.enabled);
+          }
+        });
+      });
+    })();
+  </script>
+</body>
+</html>
